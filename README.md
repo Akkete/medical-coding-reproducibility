@@ -36,7 +36,7 @@ The splits are found in `files/data`. The splits are described in the paper.
 ## How to reproduce results
 ### Setup Conda environment
 1. Create a conda environement `conda create -n coding python=3.10`
-2. Install the packages `pip install . -e`
+2. Install the packages `pip install -e .`
 
 ### Prepare MIMIC-III
 This code has been developed on MIMIC-III v1.4. 
@@ -76,7 +76,7 @@ Evaluate PLM-ICD on MIMIC-IV ICD-10 on GPU 1: `python main.py experiment=mimiciv
 
 ## Overview of the repository
 #### configs
-We use [Hydra](https://hydra.cc/docs/intro/) for configurations. The condigs for every experiment is found in `configs/experiments`. Furthermore, the configuration for the sweeps are found in `configs/sweeps`. We used [Weights and Biases Sweeps](https://docs.wandb.ai/guides/sweeps) for most of our experiments.
+We use [Hydra](https://hydra.cc/docs/intro/) for configurations. The configs for every experiment is found in `configs/experiments`. Furthermore, the configuration for the sweeps are found in `configs/sweeps`. We used [Weights and Biases Sweeps](https://docs.wandb.ai/guides/sweeps) for most of our experiments.
 
 #### files
 This is where the images and data is stored.
@@ -91,10 +91,10 @@ The directory contains all the code for preparing the datasets and generating sp
 This is the code used to generate the plots and tables used in the paper. The code uses the Weights and Biases API to fetch the experiment results. The code is not usable by others, but was included for the possibility to validate our figures and tables.
 
 #### src
-This is were the code for running the experiments is found.
+This is where the code for running the experiments is found.
 
 #### tests
-The directory contains the unit tests
+The directory contains the unit tests.
 
 ## ⚠️ Known issues 
 * LAAT and PLM-ICD are unstable. The loss will sometimes diverge during training. The issue seems to be overflow in the softmax function in the label-wise attention. Using batch norm or layer norm before the softmax function might solve the issue. We did not try to fix the issue as we didn't want to change the original method during our reproducibility.
