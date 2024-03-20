@@ -90,8 +90,8 @@ preprocessor = TextPreprocessor(
 random.seed(10)
 
 # The dataset requires a Licence in physionet. Once it is obtained, download the dataset with the following command in the terminal:
-# wget -r -N -c -np --user <your_physionet_user_name> --ask-password https://physionet.org/files/mimiciii/1.4/
-# Change the path of DOWNLOAD_DIRECTORY to the path where you downloaded mimiciii
+# wget -r -N -c -np --user <your_physionet_user_name> --ask-password https://physionet.org/files/mimiciv/2.2/
+# Change the path of DOWNLOAD_DIRECTORY to the path where you downloaded mimiciv
 
 logging.basicConfig(level=logging.INFO)
 
