@@ -75,125 +75,126 @@ def parse_notes_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop_duplicates(subset=[ID_COLUMN, TEXT_COLUMN])
     return df
 
+if __name__ == "__main__":
 
-MIN_TARGET_COUNT = 10  # Minimum number of times a code must appear to be included
-preprocessor = TextPreprocessor(
-    lower=True,
-    remove_special_characters_mullenbach=True,
-    remove_special_characters=False,
-    remove_digits=True,
-    remove_accents=False,
-    remove_brackets=False,
-    convert_danish_characters=False,
-)
+    MIN_TARGET_COUNT = 10  # Minimum number of times a code must appear to be included
+    preprocessor = TextPreprocessor(
+        lower=True,
+        remove_special_characters_mullenbach=True,
+        remove_special_characters=False,
+        remove_digits=True,
+        remove_accents=False,
+        remove_brackets=False,
+        convert_danish_characters=False,
+    )
 
-random.seed(10)
+    random.seed(10)
 
-# The dataset requires a Licence in physionet. Once it is obtained, download the dataset with the following command in the terminal:
-# wget -r -N -c -np --user <your_physionet_user_name> --ask-password https://physionet.org/files/mimiciv/2.2/
-# Change the path of DOWNLOAD_DIRECTORY to the path where you downloaded mimiciv
+    # The dataset requires a Licence in physionet. Once it is obtained, download the dataset with the following command in the terminal:
+    # wget -r -N -c -np --user <your_physionet_user_name> --ask-password https://physionet.org/files/mimiciv/2.2/
+    # Change the path of DOWNLOAD_DIRECTORY to the path where you downloaded mimiciv
 
-logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
-download_dir_note = Path(DOWNLOAD_DIRECTORY_MIMICIV_NOTE)
-download_dir = Path(DOWNLOAD_DIRECTORY_MIMICIV)
-output_dir_icd9 = Path(DATA_DIRECTORY_MIMICIV_ICD9)
-output_dir_icd9.mkdir(parents=True, exist_ok=True)
+    download_dir_note = Path(DOWNLOAD_DIRECTORY_MIMICIV_NOTE)
+    download_dir = Path(DOWNLOAD_DIRECTORY_MIMICIV)
+    output_dir_icd9 = Path(DATA_DIRECTORY_MIMICIV_ICD9)
+    output_dir_icd9.mkdir(parents=True, exist_ok=True)
 
-output_dir_icd10 = Path(DATA_DIRECTORY_MIMICIV_ICD10)
-output_dir_icd10.mkdir(parents=True, exist_ok=True)
+    output_dir_icd10 = Path(DATA_DIRECTORY_MIMICIV_ICD10)
+    output_dir_icd10.mkdir(parents=True, exist_ok=True)
 
-# Load the data
-mimic_notes = load_gz_file_into_df(download_dir_note / "note/discharge.csv.gz")
-mimic_proc = load_gz_file_into_df(
-    download_dir / "hosp/procedures_icd.csv.gz", dtype={"icd_code": str}
-)
-mimic_diag = load_gz_file_into_df(
-    download_dir / "hosp/diagnoses_icd.csv.gz", dtype={"icd_code": str}
-)
+    # Load the data
+    mimic_notes = load_gz_file_into_df(download_dir_note / "note/discharge.csv.gz")
+    mimic_proc = load_gz_file_into_df(
+        download_dir / "hosp/procedures_icd.csv.gz", dtype={"icd_code": str}
+    )
+    mimic_diag = load_gz_file_into_df(
+        download_dir / "hosp/diagnoses_icd.csv.gz", dtype={"icd_code": str}
+    )
 
-# Format the codes by adding decimal points
-mimic_proc["icd_code"] = mimic_proc.apply(
-    lambda row: reformat_icd(
-        code=row["icd_code"], version=row["icd_version"], is_diag=False
-    ),
-    axis=1,
-)
-mimic_diag["icd_code"] = mimic_diag.apply(
-    lambda row: reformat_icd(
-        code=row["icd_code"], version=row["icd_version"], is_diag=True
-    ),
-    axis=1,
-)
+    # Format the codes by adding decimal points
+    mimic_proc["icd_code"] = mimic_proc.apply(
+        lambda row: reformat_icd(
+            code=row["icd_code"], version=row["icd_version"], is_diag=False
+        ),
+        axis=1,
+    )
+    mimic_diag["icd_code"] = mimic_diag.apply(
+        lambda row: reformat_icd(
+            code=row["icd_code"], version=row["icd_version"], is_diag=True
+        ),
+        axis=1,
+    )
 
 
-# Process codes and notes
-mimic_proc = parse_codes_dataframe(mimic_proc)
-mimic_diag = parse_codes_dataframe(mimic_diag)
-mimic_notes = parse_notes_dataframe(mimic_notes)
+    # Process codes and notes
+    mimic_proc = parse_codes_dataframe(mimic_proc)
+    mimic_diag = parse_codes_dataframe(mimic_diag)
+    mimic_notes = parse_notes_dataframe(mimic_notes)
 
-# Merge the codes and notes into a icd9 and icd10 dataframe
-mimic_proc_9 = mimic_proc[mimic_proc["icd_version"] == 9]
-mimic_proc_9 = mimic_proc_9.rename(columns={"icd_code": "icd9_proc"})
-mimic_proc_10 = mimic_proc[mimic_proc["icd_version"] == 10]
-mimic_proc_10 = mimic_proc_10.rename(columns={"icd_code": "icd10_proc"})
+    # Merge the codes and notes into a icd9 and icd10 dataframe
+    mimic_proc_9 = mimic_proc[mimic_proc["icd_version"] == 9]
+    mimic_proc_9 = mimic_proc_9.rename(columns={"icd_code": "icd9_proc"})
+    mimic_proc_10 = mimic_proc[mimic_proc["icd_version"] == 10]
+    mimic_proc_10 = mimic_proc_10.rename(columns={"icd_code": "icd10_proc"})
 
-mimic_diag_9 = mimic_diag[mimic_diag["icd_version"] == 9]
-mimic_diag_9 = mimic_diag_9.rename(columns={"icd_code": "icd9_diag"})
-mimic_diag_10 = mimic_diag[mimic_diag["icd_version"] == 10]
-mimic_diag_10 = mimic_diag_10.rename(columns={"icd_code": "icd10_diag"})
+    mimic_diag_9 = mimic_diag[mimic_diag["icd_version"] == 9]
+    mimic_diag_9 = mimic_diag_9.rename(columns={"icd_code": "icd9_diag"})
+    mimic_diag_10 = mimic_diag[mimic_diag["icd_version"] == 10]
+    mimic_diag_10 = mimic_diag_10.rename(columns={"icd_code": "icd10_diag"})
 
-mimiciv_9 = mimic_notes.merge(
-    mimic_proc_9[[ID_COLUMN, "icd9_proc"]], on=ID_COLUMN, how="left"
-)
-mimiciv_9 = mimiciv_9.merge(
-    mimic_diag_9[[ID_COLUMN, "icd9_diag"]], on=ID_COLUMN, how="left"
-)
+    mimiciv_9 = mimic_notes.merge(
+        mimic_proc_9[[ID_COLUMN, "icd9_proc"]], on=ID_COLUMN, how="left"
+    )
+    mimiciv_9 = mimiciv_9.merge(
+        mimic_diag_9[[ID_COLUMN, "icd9_diag"]], on=ID_COLUMN, how="left"
+    )
 
-mimiciv_10 = mimic_notes.merge(
-    mimic_proc_10[[ID_COLUMN, "icd10_proc"]], on=ID_COLUMN, how="left"
-)
-mimiciv_10 = mimiciv_10.merge(
-    mimic_diag_10[[ID_COLUMN, "icd10_diag"]], on=ID_COLUMN, how="left"
-)
+    mimiciv_10 = mimic_notes.merge(
+        mimic_proc_10[[ID_COLUMN, "icd10_proc"]], on=ID_COLUMN, how="left"
+    )
+    mimiciv_10 = mimiciv_10.merge(
+        mimic_diag_10[[ID_COLUMN, "icd10_diag"]], on=ID_COLUMN, how="left"
+    )
 
-# remove notes with no codes
-mimiciv_9 = mimiciv_9.dropna(subset=["icd9_proc", "icd9_diag"], how="all")
-mimiciv_10 = mimiciv_10.dropna(subset=["icd10_proc", "icd10_diag"], how="all")
+    # remove notes with no codes
+    mimiciv_9 = mimiciv_9.dropna(subset=["icd9_proc", "icd9_diag"], how="all")
+    mimiciv_10 = mimiciv_10.dropna(subset=["icd10_proc", "icd10_diag"], how="all")
 
-# convert NaNs to empty lists
-mimiciv_9["icd9_proc"] = mimiciv_9["icd9_proc"].apply(
-    lambda x: [] if x is np.nan else x
-)
-mimiciv_9["icd9_diag"] = mimiciv_9["icd9_diag"].apply(
-    lambda x: [] if x is np.nan else x
-)
-mimiciv_10["icd10_proc"] = mimiciv_10["icd10_proc"].apply(
-    lambda x: [] if x is np.nan else x
-)
-mimiciv_10["icd10_diag"] = mimiciv_10["icd10_diag"].apply(
-    lambda x: [] if x is np.nan else x
-)
+    # convert NaNs to empty lists
+    mimiciv_9["icd9_proc"] = mimiciv_9["icd9_proc"].apply(
+        lambda x: [] if x is np.nan else x
+    )
+    mimiciv_9["icd9_diag"] = mimiciv_9["icd9_diag"].apply(
+        lambda x: [] if x is np.nan else x
+    )
+    mimiciv_10["icd10_proc"] = mimiciv_10["icd10_proc"].apply(
+        lambda x: [] if x is np.nan else x
+    )
+    mimiciv_10["icd10_diag"] = mimiciv_10["icd10_diag"].apply(
+        lambda x: [] if x is np.nan else x
+    )
 
-mimiciv_9 = filter_codes(mimiciv_9, ["icd9_proc", "icd9_diag"], MIN_TARGET_COUNT)
-mimiciv_10 = filter_codes(mimiciv_10, ["icd10_proc", "icd10_diag"], MIN_TARGET_COUNT)
+    mimiciv_9 = filter_codes(mimiciv_9, ["icd9_proc", "icd9_diag"], MIN_TARGET_COUNT)
+    mimiciv_10 = filter_codes(mimiciv_10, ["icd10_proc", "icd10_diag"], MIN_TARGET_COUNT)
 
-# define target
-mimiciv_9[TARGET_COLUMN] = mimiciv_9["icd9_proc"] + mimiciv_9["icd9_diag"]
-mimiciv_10[TARGET_COLUMN] = mimiciv_10["icd10_proc"] + mimiciv_10["icd10_diag"]
+    # define target
+    mimiciv_9[TARGET_COLUMN] = mimiciv_9["icd9_proc"] + mimiciv_9["icd9_diag"]
+    mimiciv_10[TARGET_COLUMN] = mimiciv_10["icd10_proc"] + mimiciv_10["icd10_diag"]
 
-# remove empty target
-mimiciv_9 = mimiciv_9[mimiciv_9[TARGET_COLUMN].apply(lambda x: len(x) > 0)]
-mimiciv_10 = mimiciv_10[mimiciv_10[TARGET_COLUMN].apply(lambda x: len(x) > 0)]
+    # remove empty target
+    mimiciv_9 = mimiciv_9[mimiciv_9[TARGET_COLUMN].apply(lambda x: len(x) > 0)]
+    mimiciv_10 = mimiciv_10[mimiciv_10[TARGET_COLUMN].apply(lambda x: len(x) > 0)]
 
-# reset index
-mimiciv_9 = mimiciv_9.reset_index(drop=True)
-mimiciv_10 = mimiciv_10.reset_index(drop=True)
+    # reset index
+    mimiciv_9 = mimiciv_9.reset_index(drop=True)
+    mimiciv_10 = mimiciv_10.reset_index(drop=True)
 
-# Text preprocess the notes
-mimiciv_9 = preprocess_documents(df=mimiciv_9, preprocessor=preprocessor)
-mimiciv_10 = preprocess_documents(df=mimiciv_10, preprocessor=preprocessor)
+    # Text preprocess the notes
+    mimiciv_9 = preprocess_documents(df=mimiciv_9, preprocessor=preprocessor)
+    mimiciv_10 = preprocess_documents(df=mimiciv_10, preprocessor=preprocessor)
 
-# save files to disk
-mimiciv_9.to_feather(output_dir_icd9 / "mimiciv_icd9.feather")
-mimiciv_10.to_feather(output_dir_icd10 / "mimiciv_icd10.feather")
+    # save files to disk
+    mimiciv_9.to_feather(output_dir_icd9 / "mimiciv_icd9.feather")
+    mimiciv_10.to_feather(output_dir_icd10 / "mimiciv_icd10.feather")
